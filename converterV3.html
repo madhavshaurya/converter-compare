@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ID Converter, Reverter & Comparator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      max-width: 900px;
+    }
+    textarea {
+      width: 100%;
+      height: 180px;
+      font-family: monospace;
+      margin-bottom: 1rem;
+    }
+    #output, #missingOutput, #extraOutput {
+      white-space: pre-wrap;
+      background-color: #f2f2f2;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      min-height: 60px;
+      margin-bottom: 1rem;
+    }
+    button {
+      margin-right: 0.5rem;
+      margin-bottom: 1rem;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    hr {
+      margin: 2.5rem 0;
+    }
+    label {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Convert / Revert ID Lists</h2>
+
+  <label for="input">Input IDs</label>
+  <textarea id="input" placeholder="Paste IDs (comma-separated OR line-separated)"></textarea>
+
+  <input type="checkbox" id="wrapDoubleQuotes">
+  <label for="wrapDoubleQuotes">Wrap each value in double quotes</label><br>
+
+  <input type="checkbox" id="wrapSingleQuotes">
+  <label for="wrapSingleQuotes">Wrap each value in single quotes</label><br><br>
+
+  <button onclick="convertToComma()">List ➜ Comma Separated</button>
+  <button onclick="convertToList()">Comma Separated ➜ List</button>
+  <button onclick="copyText('input')">Copy Input</button>
+
+  <h3>Output</h3>
+  <div id="output"></div>
+  <button onclick="copyDiv('output')">Copy Output</button>
+
+  <hr>
+
+  <h2>Compare Two ID Lists</h2>
+
+  <label for="listA">List A (Expected / Master List)</label>
+  <textarea id="listA" placeholder="Paste full list here"></textarea>
+
+  <label for="listB">List B (Processed / Available List)</label>
+  <textarea id="listB" placeholder="Paste second list here"></textarea>
+
+  <button onclick="compareLists()">Compare</button>
+
+  <h3>Missing in List B</h3>
+  <div id="missingOutput"></div>
+
+  <h3>Extra in List B</h3>
+  <div id="extraOutput"></div>
+
+  <script>
+    function normalizeList(text) {
+      return text
+        .split(/[\n,]+/)
+        .map(v =>
+          v
+            .trim()
+            .replace(/^['"]+|['"]+$/g, '')
+        )
+        .filter(v => v.length > 0);
+    }
+
+    function convertToComma() {
+      const input = document.getElementById('input').value;
+      const wrapDoubleQuotes = document.getElementById('wrapDoubleQuotes').checked;
+      const wrapSingleQuotes = document.getElementById('wrapSingleQuotes').checked;
+
+      const values = normalizeList(input);
+
+      const result = values
+        .map(v => {
+          if (wrapSingleQuotes) return `'${v}'`;
+          if (wrapDoubleQuotes) return `"${v}"`;
+          return v;
+        })
+        .join(', ');
+
+      document.getElementById('output').textContent = result;
+    }
+
+    function convertToList() {
+      const input = document.getElementById('input').value;
+
+      const values = normalizeList(input);
+      const result = values.join('\n');
+
+      document.getElementById('output').textContent = result;
+    }
+
+    function compareLists() {
+      const listA = normalizeList(document.getElementById('listA').value);
+      const listB = normalizeList(document.getElementById('listB').value);
+
+      const setA = new Set(listA);
+      const setB = new Set(listB);
+
+      const missing = [...setA].filter(x => !setB.has(x));
+      const extra = [...setB].filter(x => !setA.has(x));
+
+      document.getElementById('missingOutput').textContent =
+        missing.length ? missing.join(', ') : 'None 🎉';
+
+      document.getElementById('extraOutput').textContent =
+        extra.length ? extra.join(', ') : 'None';
+    }
+
+    function copyText(id) {
+      const el = document.getElementById(id);
+      el.select();
+      document.execCommand('copy');
+    }
+
+    function copyDiv(id) {
+      const text = document.getElementById(id).textContent;
+      const temp = document.createElement('textarea');
+      temp.value = text;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+    }
+  </script>
+
+</body>
+</html>
